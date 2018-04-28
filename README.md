@@ -2,10 +2,11 @@
 Probabilistic Time Series Models
 
 # Completed
-- HMM discrete observations(Baum-Welch needs to be reviewed)
+- HMM discrete observations
 
 # To be completed
 - HMM continuous observations
+- Factorial HMM
 - AR models
 - LDS
 - SLDS
