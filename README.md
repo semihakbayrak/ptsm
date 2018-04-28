@@ -6,7 +6,7 @@ Probabilistic Time Series Models
 
 # To be completed
 - HMM continuous observations
-- Factorial HMM
+- Factorial HMMs
 - AR models
 - LDS
 - SLDS
