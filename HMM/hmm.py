@@ -8,11 +8,12 @@ if parentPath not in sys.path:
 from utils import randgen, log_sum_exp, normalize, normalize_exp
 
 class discrete_observation_HMM:
-    def __init__(self,A,B,pi,S,K=0):
+    def __init__(self,A,B,pi,S,O,K=0):
         self.A = A #Transition matrix
         self.B = B #Emission matrix
         self.pi = pi #prior state distributions for first hidden variable
-        self.S = S #Number of states
+        self.S = S #Number of possible states
+        self.O = O #Number of possible observations
         self.K = K #Number of time slices
 
     #Generate simulated data
@@ -88,54 +89,42 @@ class discrete_observation_HMM:
         return mp_path
 
     #Baum-Welch algorithm for parameter estimation
-    def parameter_estimation_em(self,y_list, num_of_epochs=20):
-        N = len(y_list) #number of observations
+    def parameter_estimation_em(self,y, num_of_epochs=20):
         #Initialization
-        A_estimated = np.random.rand(self.S,self.S)
+        A_estimated = np.random.rand(self.O,self.S)
         A_estimated = A_estimated/np.sum(A_estimated,axis=0)
         B_estimated = np.random.rand(self.S,self.S)
         B_estimated = B_estimated/np.sum(B_estimated,axis=0)
-        #B_estimated = np.eye(self.S) + 1e-5
-        #B_estimated = B_estimated/np.sum(B_estimated,axis=0)
         pi_estimated = np.ones(self.S)/self.S
         self.A = A_estimated
         self.B = B_estimated
         self.pi = pi_estimated
         for epoch in range(num_of_epochs):
-            gamma_dict, alpha_dict, beta_postdict_dict = {}, {}, {}
             #E-step
-            for n in range(N):
-                y = y_list[n]
-                log_gamma = self.forward_backward(y)
-                gamma = normalize_exp(log_gamma,axis=0)
-                log_alpha, log_alpha_predict = self.forward_pass(y)
-                alpha = normalize_exp(log_alpha,axis=0)
-                log_beta, log_beta_postdict = self.backward_pass(y)
-                beta = normalize_exp(log_beta,axis=0)
-                beta_postdict = normalize_exp(log_beta_postdict,axis=0)
-                gamma_dict[n] = gamma
-                alpha_dict[n] = alpha
-                beta_postdict_dict[n] = beta_postdict
+            log_gamma = self.forward_backward(y)
+            gamma = normalize_exp(log_gamma,axis=0)
+            log_alpha, log_alpha_predict = self.forward_pass(y)
+            alpha = normalize_exp(log_alpha,axis=0)
+            log_beta, log_beta_postdict = self.backward_pass(y)
+            beta = normalize_exp(log_beta,axis=0)
+            beta_postdict = normalize_exp(log_beta_postdict,axis=0)
             #M-step
-            A_new = np.zeros((self.S,self.S))
-            B_new = np.zeros((self.S,self.S))
-            pi_estimated = 0
-            for n in range(N):
-                y = y_list[n]
-                gamma = gamma_dict[n]
-                alpha = alpha_dict[n]
-                beta_postdict = beta_postdict_dict[n]
-                pi_estimated = pi_estimated + gamma[:,0]
-                for t in range(self.K):
-                    if t != 0:
-                        A_new = A_new + A_estimated*(B_estimated[y[t],:]*(alpha[:,t-1]*beta_postdict[:,t]).T)
-                    B_new[y[t],:] = B_new[y[t],:] + gamma[:,t].T
-            pi_estimated = pi_estimated/pi_estimated.sum()
-            A_estimated = A_new/np.sum(A_new,axis=0)
-            B_estimated = B_new/np.sum(B_new,axis=0)
-            #A_estimated = normalize(A_new)
-            #B_estimated = normalize(B_new)
+            pi_estimated = gamma[:,0]
             self.pi = pi_estimated
+
+            A_count = np.zeros((self.O,self.S))
+            for t in range(self.K):
+                if t != 0:
+                    A_new = A_estimated*(B_estimated[y[t],:].reshape(1,self.S).T)*(alpha[:,t-1].reshape(self.S,1).T)*beta_postdict[:,t]
+                    A_new = A_new/A_new.sum()
+                    A_count = A_count + A_new
+            A_estimated = A_count/(np.sum(gamma[:,0:-1],axis=1).reshape(self.S,1))
+            A_estimated = A_estimated/np.sum(A_estimated,axis=0)
             self.A = A_estimated
+
+            B_count = np.zeros((self.S,self.S))
+            for t in range(self.K):
+                B_count[y[t],:] = B_count[y[t],:] + gamma[:,t].reshape(self.S,1).T
+            B_estimated = B_count/np.sum(B_count,axis=0)
             self.B = B_estimated
         return A_estimated, B_estimated, pi_estimated
