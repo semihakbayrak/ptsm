@@ -4,9 +4,12 @@ Probabilistic Time Series Models
 # Completed
 - HMM discrete observations
 
-# To be completed
+# In Progress
 - HMM continuous observations
+
+# To be completed
 - Factorial HMMs
 - AR models
 - LDS
 - SLDS
+- RNNs
