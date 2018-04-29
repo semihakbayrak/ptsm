@@ -206,6 +206,18 @@ class continuous_observation_HMM:
     def state_postdict(A,log_p):
         return log_sum_exp(A,log_p)
 
+    @staticmethod
+    def probs_vector(y_t,C,R,S,O):
+        b = []
+        for s in range(S):
+            if O == 1:
+                pdf = scipy.stats.norm(C[s], R).pdf(y_t)
+            else:
+                pdf = scipy.stats.multivariate_normal(C[:,s], R).pdf(y_t)
+            b.append(pdf)
+        b = np.array(b)
+        return b
+
     #Inference Forward-Backward for smoothing
     def forward_backward(self,y):
         log_alpha, _ = self.forward_pass(y)
@@ -224,3 +236,60 @@ class continuous_observation_HMM:
             else:
                 mp_path[t] = np.argmax(log_alpha[:,t]*(self.A[mp_path[t+1],:].T))
         return mp_path
+
+    #Baum-Welch algorithm for parameter estimation
+    def parameter_estimation_em(self,y, num_of_epochs=20):
+        if self.O == 1:
+            #Initialization
+            A_estimated = np.random.rand(self.S,self.S)
+            A_estimated = A_estimated/np.sum(A_estimated,axis=0)
+            C_estimated = []
+            R_estimated = 1.
+            y_max = np.max(y)
+            y_min = np.min(y)
+            gap = (y_max-y_min)/(self.S-1.)
+            for s in range(self.S):
+                C_estimated.append(y_min+gap*s)
+            C_estimated = np.array(C_estimated)
+            pi_estimated = np.ones(self.S)/self.S
+            self.A = A_estimated
+            self.C = C_estimated
+            self.R = R_estimated
+            self.pi = pi_estimated
+            for epoch in range(num_of_epochs):
+                #E-step
+                log_gamma = self.forward_backward(y)
+                gamma = normalize_exp(log_gamma,axis=0)
+                log_alpha, log_alpha_predict = self.forward_pass(y)
+                alpha = normalize_exp(log_alpha,axis=0)
+                log_beta, log_beta_postdict = self.backward_pass(y)
+                beta = normalize_exp(log_beta,axis=0)
+                beta_postdict = normalize_exp(log_beta_postdict,axis=0)
+                #M-step
+                pi_estimated = gamma[:,0]
+                self.pi = pi_estimated
+
+                A_count = np.zeros((self.S,self.S))
+                for t in range(self.K):
+                    if t != 0:
+                        b = self.probs_vector(y[t],self.C,self.R,self.S,self.O)
+                        A_new = A_estimated*(b.reshape(1,self.S).T)*(alpha[:,t-1].reshape(self.S,1).T)*beta_postdict[:,t]
+                        A_new = A_new/A_new.sum()
+                        A_count = A_count + A_new
+                A_estimated = A_count/(np.sum(gamma[:,0:-1],axis=1).reshape(self.S,1))
+                A_estimated = A_estimated/np.sum(A_estimated,axis=0)
+                self.A = A_estimated
+
+                C_count = np.ones(self.S) - 1
+                for t in range(self.K):
+                    C_count = C_count + gamma[:,t]*y[t]
+                C_estimated = C_count/np.sum(gamma,axis=1)
+                self.C = C_estimated
+
+                R_count = 0
+                for t in range(self.K):
+                    R_count = R_count + np.sum(gamma[:,t]*(y[t]-C_estimated)**2)
+                R_estimated = R_count/self.K
+                self.R = R_estimated
+
+        return A_estimated, C_estimated, R_estimated, pi_estimated
