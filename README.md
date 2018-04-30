@@ -6,10 +6,10 @@ Probabilistic Time Series Models
 - HMM continuous observations
 
 # In Progress
-- AR models
+- LDS
 
 # To be completed
 - Factorial HMMs
-- LDS
+- AR models
 - SLDS
 - RNNs
