@@ -7,6 +7,19 @@ parentPath = os.path.abspath("..")
 if parentPath not in sys.path:
     sys.path.insert(0, parentPath)
 
+'''
+LDS class works with the generic array definition of numpy.
+For example: the dimensionalities S,O can take positive integer values 1,2,3,4,...
+Model parameter definition is compatible with the random array definition of numpy
+A = np.random.rand(S,S)
+B = np.random.rand(O,S)
+pi_m = np.random.rand(S)
+pi_s = np.eye(S)
+E_h = np.eye(S)
+E_o = np.eye(O)
+for all valid values of S and O i.e. 1,2,3,4,...
+'''
+
 class LDS:
     def __init__(self,A,B,pi_m,pi_s,S,O,E_h,E_o,K=0):
         self.A = A #Transition matrix
@@ -73,33 +86,48 @@ class LDS:
         else:
             return f_list, F_list
 
-    #Inference-Smoothing
-    def smoothing(self,y,g=0,G=0,f_list=[],F_list=[],g_list=[],G_list=[],count=0):
+    #Inference-Backward
+    def backward(self,y,g=0,G=0,g_list=[],G_list=[],count=0):
         if count == 0:
-            f_list, F_list = self.filtering(y)
-            g_new = f_list[-1]
-            G_new = F_list[-1]
+            g_new = np.dot(np.linalg.pinv(self.B),y[self.K-count-1].reshape(self.O,1))
+            G_new = np.dot(np.linalg.pinv(self.B),np.dot(self.E_o,np.linalg.pinv(self.B.T)))
             g_list.append(g_new)
             G_list.append(G_new)
             count += 1
-            self.smoothing(y,g_new,G_new,f_list,F_list,g_list,G_list,count)
+            self.backward(y,g_new,G_new,g_list,G_list,count)
             return g_list, G_list
         elif count < len(y):
-            f = f_list[len(y)-count-1]
-            F = F_list[len(y)-count-1]
-            m_h = np.dot(self.A,f)
-            E_hf_hf = np.dot(self.A,np.dot(F,self.A.T)) + self.E_h
-            E_hf_h = np.dot(self.A,F)
-            E_h_hf = E_hf_h.T
-            E_n = F - np.dot(np.dot(E_h_hf,np.linalg.inv(E_hf_hf)),E_hf_h)
-            A_n = np.dot(E_h_hf,np.linalg.inv(E_hf_hf))
-            m_n = f - np.dot(A_n,m_h)
-            g_new = np.dot(A_n,g) + m_n
-            G_new = np.dot(A_n,np.dot(G,A_n.T)) + E_n
+            m_h = np.dot(np.linalg.inv(self.A),g)
+            m_o = np.dot(self.B,m_h)
+            E_hh = np.dot(np.linalg.inv(self.A),np.dot(G + self.E_h, np.linalg.inv(self.A.T)))
+            E_oo = np.dot(self.B,np.dot(E_hh,self.B.T)) + self.E_o
+            E_oh = np.dot(self.B,E_hh)
+            E_ho = E_oh.T
+            g_new = m_h + np.dot(np.dot(E_ho,np.linalg.inv(E_oo)),(y[count].reshape(self.O,1)-m_o))
+            G_new = E_hh - np.dot(np.dot(E_ho,np.linalg.inv(E_oo)),E_oh)
             g_list.append(g_new)
             G_list.append(G_new)
             count = count + 1
-            self.smoothing(y,g_new,G_new,f_list,F_list,g_list,G_list,count)
+            self.backward(y,g_new,G_new,g_list,G_list,count)
             return g_list, G_list
         else:
             return g_list.reverse(), G_list.reverse()
+
+    #Inference-Smoothing
+    def smoothing(self,y):
+        f_list, F_list = self.filtering(y)
+        g_list, G_list = self.backward(y)
+        h_list, H_list = [], []
+        for t in range(self.K):
+            if t != self.K-1:
+                F, G = F_list[t], G_list[t+1]
+                f, g = f_list[t], g_list[t+1]
+                H = np.linalg.inv(np.linalg.inv(F) + np.dot(self.A.T,np.dot(np.linalg.inv(G+self.E_h),self.A)))
+                h = np.dot(H, (np.dot(np.linalg.inv(F),f) + np.dot(self.A.T,np.dot(np.linalg.inv(G+self.E_h),g))))
+                h_list.append(h)
+                H_list.append(H)
+            else:
+                H, h = F_list[t], f_list[t]
+                h_list.append(h)
+                H_list.append(H)
+        return h_list, H_list
