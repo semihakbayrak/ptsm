@@ -12,5 +12,5 @@ Probabilistic Time Series Models
 # To be completed
 - Factorial HMMs
 - AR models
-- SLDS
+- Switching State Space Models
 - RNNs
