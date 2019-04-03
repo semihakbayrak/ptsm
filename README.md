@@ -11,7 +11,7 @@ Probabilistic Time Series Models
 
 # In Progress
 - LDS EM Cholesky decomposition for stable procedure
-- Switching State Space Models with Particle Filtering
+- Switching State Space Models with Rao-Blackwellized Particle Filtering
 - Better visualization for experiments (f.e. covariance info visualization in LDS)
 
 # To be completed
