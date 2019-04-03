@@ -13,4 +13,6 @@ Probabilistic Time Series Models
 - Factorial HMMs
 - AR models
 - Switching State Space Models
+- Extended and Unscented Kalman Filters
 - RNNs
+- Structured Variational Autoencoders
