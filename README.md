@@ -2,9 +2,10 @@
 Probabilistic Time Series Models
 
 # Completed
-- HMM discrete observations
-- HMM continuous observations
+- HMM discrete observations forward-backward
+- HMM continuous observations forward-backward
 - HMM Baum-Welch algorithm for paramter estimation
+- HMM Viterbi algorithm for most probable path
 - LDS filtering and smoothing
 - LDS EM parameter estimation
 
