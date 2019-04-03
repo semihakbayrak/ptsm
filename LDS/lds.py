@@ -131,3 +131,56 @@ class LDS:
                 h_list.append(h)
                 H_list.append(H)
         return h_list, H_list
+
+    #Parameter estimation with EM
+    def EM(self,y,A_init=np.nan,B_init=np.nan,pi_m_init=np.nan,pi_s_init=np.nan,E_h_init=np.nan,E_o_init=np.nan,num_iterations=5):
+    	if np.isnan(A_init):
+    		self.A = np.random.rand(self.S,self.S)
+    	if np.isnan(B_init):
+    		self.B = np.random.rand(self.O,self.S)
+    	if np.isnan(pi_m_init):
+    		self.pi_m = np.random.rand(self.S)
+    	if np.isnan(pi_s_init):
+    		self.pi_s = np.eye(self.S)
+    	if np.isnan(E_h_init):
+    		self.E_h = np.eye(self.S)
+    	if np.isnan(E_o_init):
+    		self.E_o = np.eye(self.O)
+    	#EM iterations
+    	for _ in range(num_iterations):
+    		#E-step
+    		h_list, H_list = self.smoothing(y)
+    		#M-step
+    		self.pi_m = h_list[0]
+    		self.pi_s = H_list[0]
+    		sum1, sum2 = 0, 0
+    		for i in range(self.K-1):
+    			t = i + 1
+    			sum1 += np.dot(self.A, np.dot(H_list[t-1],self.A.T)) + np.dot(h_list[t], h_list[t-1].T)
+    			sum2 += H_list[t-1] + np.dot(h_list[t-1],h_list[t-1].T)
+    		self.A = np.dot(sum1, np.linalg.inv(sum2))
+    		sum1 = 0
+    		for t in range(self.K):
+    			sum1 += np.dot(y[t].reshape(self.O,1), h_list[t].T)
+    		sum2 += H_list[self.K-1] + np.dot(h_list[self.K-1],h_list[self.K-1].T)
+    		self.B = np.dot(sum1, np.linalg.inv(sum2))
+    		sum1 = np.dot(sum1, self.B.T)
+    		sum3 = 0
+    		for t in range(self.K):
+    			sum3 += np.dot(y[t].reshape(self.O,1), y[t].reshape(1,self.O))
+    		self.E_o = (sum3 - sum1)/self.K
+    		sum2 = sum2 - H_list[0] - np.dot(h_list[0],h_list[0].T)
+    		sum1 = 0
+    		for i in range(self.K-1):
+    			t = i + 1
+    			sum1 += np.dot(self.A, np.dot(H_list[t-1].T,self.A.T)) + np.dot(h_list[t-1], h_list[t].T)
+    		sum1 = np.dot(self.A, sum1)
+    		self.E_v = (sum2 - sum1)/(self.K-1)
+    	h_list, H_list = self.smoothing(y)
+    	return self.A, self.B, self.pi_m, self.pi_s, self.E_h, self.E_o, h_list, H_list
+
+
+
+
+
+
