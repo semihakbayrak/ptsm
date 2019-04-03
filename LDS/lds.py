@@ -179,8 +179,3 @@ class LDS:
     	h_list, H_list = self.smoothing(y)
     	return self.A, self.B, self.pi_m, self.pi_s, self.E_h, self.E_o, h_list, H_list
 
-
-
-
-
-
