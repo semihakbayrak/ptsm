@@ -113,8 +113,8 @@ class LDS:
         else:
             return g_list.reverse(), G_list.reverse()
 
-    #Inference-Smoothing
-    def smoothing(self,y):
+    #Inference-Smoothing but unstable because uses backward
+    def smoothing_unstable(self,y):
         f_list, F_list = self.filtering(y)
         g_list, G_list = self.backward(y)
         h_list, H_list = [], []
@@ -131,6 +131,34 @@ class LDS:
                 h_list.append(h)
                 H_list.append(H)
         return h_list, H_list
+
+    #Inference-Smoothing smoothing works like correction for filtering
+    def smoothing(self,y,h=0,H=0,h_list=[],H_list=[],f_list=[],F_list=[],count=0):
+        if count == 0:
+            f_list, F_list = self.filtering(y)
+            h_new, H_new = f_list[-1], F_list[-1]
+            h_list.append(h_new)
+            H_list.append(H_new)
+            count += 1
+            self.smoothing(y,h_new,H_new,h_list,H_list,f_list, F_list,count)
+            return h_list, H_list
+        elif count < len(y):
+            f = f_list[self.K-1-count]
+            F = F_list[self.K-1-count]
+            P1 = F
+            P21 = np.dot(self.A,F)
+            P12 = P21.T
+            P2 = np.dot(P21,self.A.T) + self.E_h
+            P2inv = np.linalg.inv(P2)
+            h_new = f - np.dot(np.dot(P12,P2inv),np.dot(self.A,f)) + np.dot(np.dot(P12,P2inv),h)
+            H_new = np.dot(np.dot(P12,np.dot(P2inv,H)),np.dot(P2inv.T,P21)) + P1 - np.dot(np.dot(P12,P2inv),P21)
+            h_list.append(h_new)
+            H_list.append(H_new)
+            count = count + 1
+            self.smoothing(y,h_new,H_new,h_list,H_list,f_list,F_list,count)
+            return h_list, H_list
+        else:
+            return h_list.reverse(), H_list.reverse()
 
     #Parameter estimation with EM
     def EM(self,y,A_init=np.nan,B_init=np.nan,pi_m_init=np.nan,pi_s_init=np.nan,E_h_init=np.nan,E_o_init=np.nan,num_iterations=5):
@@ -178,4 +206,3 @@ class LDS:
     		self.E_v = (sum2 - sum1)/(self.K-1)
     	h_list, H_list = self.smoothing(y)
     	return self.A, self.B, self.pi_m, self.pi_s, self.E_h, self.E_o, h_list, H_list
-
