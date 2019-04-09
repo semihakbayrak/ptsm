@@ -204,8 +204,10 @@ class LDS:
 			sum1 = 0
 			for i in range(self.K-1):
 				t = i + 1
-				sum1 += np.dot(self.A, np.dot(H_list[t-1].T,self.A.T)) + np.dot(h_list[t-1], h_list[t].T)
+				P2 = np.dot(self.A,np.dot(F_list[t-1],self.A.T)) + self.E_h
+				P21 = np.dot(self.A,F_list[t-1])
+				sum1 += (np.dot(H_list[t].T, np.dot(np.linalg.inv(P2.T),P21)) + np.dot(h_list[t], h_list[t-1].T)).T
 			sum1 = np.dot(self.A, sum1)
-			self.E_v = (sum2 - sum1)/(self.K-1)
+			self.E_h = (sum2 - sum1)/(self.K-1)
 		h_list, H_list = self.smoothing(y)
 		return self.A, self.B, self.pi_m, self.pi_s, self.E_h, self.E_o, h_list, H_list
