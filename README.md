@@ -10,8 +10,7 @@ Probabilistic Time Series Models
 - LDS EM parameter estimation
 
 # In Progress
-- Full Bayesian inference by structured variational inference for random walk state space model with Gaussian likelihoods. 
-- LDS EM Cholesky decomposition for stable procedure
+- Switching State Space Models with structured variational inference
 - Switching State Space Models with Rao-Blackwellized Particle Filtering
 - Better visualization for experiments (f.e. covariance info visualization in LDS)
 
