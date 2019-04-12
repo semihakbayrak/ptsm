@@ -1,3 +1,4 @@
+#utility functions are mostly adapted from Ali Taylan Cemgil's notes and codes
 import numpy as np
 
 #random number generator for given probabilities with inverse transform sampling
@@ -21,14 +22,7 @@ def log_sum_exp(M,log_v):
     log_Mv = np.log(np.dot(M,v)) + mx
     return log_Mv
 
-#Normalization for inference phase
-def normalize_exp(log_P, axis=None):
-    a = np.max(log_P, keepdims=True, axis=axis)
-    P = normalize(np.exp(log_P - a), axis=axis)
-    return P
+#Normalization for (state*times) matrix with log probabilities
+def normalize_exp(log_x):
+    return np.exp(log_x - np.max(log_x,axis=0))/np.exp(log_x - np.max(log_x,axis=0)).sum(axis=0).reshape(1,log_x.shape[1])
 
-def normalize(A, axis=None):
-    Z = np.sum(A, axis=axis,keepdims=True)
-    idx = np.where(Z == 0)
-    Z[idx] = 1
-    return A/Z 

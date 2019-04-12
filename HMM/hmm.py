@@ -1,3 +1,4 @@
+#HMM is mostly adapted from Ali Taylan Cemgil's notes and codes
 import numpy as np
 import matplotlib.pyplot as plt
 import scipy.stats
@@ -6,7 +7,7 @@ import os, sys
 parentPath = os.path.abspath("..")
 if parentPath not in sys.path:
     sys.path.insert(0, parentPath)
-from utils import randgen, log_sum_exp, normalize, normalize_exp
+from utils import randgen, log_sum_exp, normalize_exp
 
 class discrete_observation_HMM:
     def __init__(self,A,B,pi,S,O,K=0):
@@ -103,12 +104,16 @@ class discrete_observation_HMM:
         for epoch in range(num_of_epochs):
             #E-step
             log_gamma = self.forward_backward(y)
-            gamma = normalize_exp(log_gamma,axis=0)
+            #gamma = normalize_exp(log_gamma,axis=0)
+            gamma = normalize_exp(log_gamma)
             log_alpha, log_alpha_predict = self.forward_pass(y)
-            alpha = normalize_exp(log_alpha,axis=0)
+            #alpha = normalize_exp(log_alpha,axis=0)
+            alpha = normalize_exp(log_alpha)
             log_beta, log_beta_postdict = self.backward_pass(y)
-            beta = normalize_exp(log_beta,axis=0)
-            beta_postdict = normalize_exp(log_beta_postdict,axis=0)
+            #beta = normalize_exp(log_beta,axis=0)
+            beta = normalize_exp(log_beta)
+            #beta_postdict = normalize_exp(log_beta_postdict,axis=0)
+            beta_postdict = normalize_exp(log_beta_postdict)
             #M-step
             pi_estimated = gamma[:,0]
             self.pi = pi_estimated
@@ -259,12 +264,16 @@ class continuous_observation_HMM:
             for epoch in range(num_of_epochs):
                 #E-step
                 log_gamma = self.forward_backward(y)
-                gamma = normalize_exp(log_gamma,axis=0)
+                #gamma = normalize_exp(log_gamma,axis=0)
+                gamma = normalize_exp(log_gamma)
                 log_alpha, log_alpha_predict = self.forward_pass(y)
-                alpha = normalize_exp(log_alpha,axis=0)
+                #alpha = normalize_exp(log_alpha,axis=0)
+                alpha = normalize_exp(log_alpha)
                 log_beta, log_beta_postdict = self.backward_pass(y)
-                beta = normalize_exp(log_beta,axis=0)
-                beta_postdict = normalize_exp(log_beta_postdict,axis=0)
+                #beta = normalize_exp(log_beta,axis=0)
+                beta = normalize_exp(log_beta)
+                #beta_postdict = normalize_exp(log_beta_postdict,axis=0)
+                beta_postdict = normalize_exp(log_beta_postdict)
                 #M-step
                 pi_estimated = gamma[:,0]
                 self.pi = pi_estimated
@@ -314,12 +323,16 @@ class continuous_observation_HMM:
             for epoch in range(num_of_epochs):
                 #E-step
                 log_gamma = self.forward_backward(y)
-                gamma = normalize_exp(log_gamma,axis=0)
+                #gamma = normalize_exp(log_gamma,axis=0)
+                gamma = normalize_exp(log_gamma)
                 log_alpha, log_alpha_predict = self.forward_pass(y)
-                alpha = normalize_exp(log_alpha,axis=0)
+                #alpha = normalize_exp(log_alpha,axis=0)
+                alpha = normalize_exp(log_alpha)
                 log_beta, log_beta_postdict = self.backward_pass(y)
-                beta = normalize_exp(log_beta,axis=0)
-                beta_postdict = normalize_exp(log_beta_postdict,axis=0)
+                #beta = normalize_exp(log_beta,axis=0)
+                beta = normalize_exp(log_beta)
+                #beta_postdict = normalize_exp(log_beta_postdict,axis=0)
+                beta_postdict = normalize_exp(log_beta_postdict)
                 #M-step
                 pi_estimated = gamma[:,0]
                 self.pi = pi_estimated

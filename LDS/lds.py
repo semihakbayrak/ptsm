@@ -60,23 +60,25 @@ class LDS:
 		return states,observations
 
 	#methods for filtering and smoothing
-	def filter_one_step(self, y_t, A_t, B_t, E_h_t, E_o_t, f_t_old, F_t_old):
+	@staticmethod
+	def filter_one_step(y_t, A_t, B_t, E_h_t, E_o_t, f_t_old, F_t_old, S, O):
 		m_h = np.dot(A_t,f_t_old)
 		m_o = np.dot(B_t,m_h)
 		E_hh = np.dot(A_t,np.dot(F_t_old,A_t.T)) + E_h_t
 		E_oo = np.dot(B_t,np.dot(E_hh,B_t.T)) + E_o_t
 		E_oh = np.dot(B_t,E_hh)
 		E_ho = E_oh.T
-		f_t = m_h + np.dot(np.dot(E_ho,np.linalg.inv(E_oo+np.eye(self.O)*10**-8)),(y_t.reshape(self.O,1)-m_o))
-		F_t = E_hh - np.dot(np.dot(E_ho,np.linalg.inv(E_oo+np.eye(self.O)*10**-8)),E_oh)
+		f_t = m_h + np.dot(np.dot(E_ho,np.linalg.inv(E_oo+np.eye(O)*10**-8)),(y_t.reshape(O,1)-m_o))
+		F_t = E_hh - np.dot(np.dot(E_ho,np.linalg.inv(E_oo+np.eye(O)*10**-8)),E_oh)
 		return f_t, F_t
 
-	def smooth_one_step(self, A_t_plus_1, E_h_t_plus_1, f_t, F_t, h_t_plus_1, H_t_plus_1):
+	@staticmethod
+	def smooth_one_step(A_t_plus_1, E_h_t_plus_1, f_t, F_t, h_t_plus_1, H_t_plus_1, S, O):
 		P1 = F_t
 		P21 = np.dot(A_t_plus_1,F_t)
 		P12 = P21.T
 		P2 = np.dot(P21,A_t_plus_1.T) + E_h_t_plus_1
-		P2inv = np.linalg.inv(P2+np.eye(self.S)*10**-8)
+		P2inv = np.linalg.inv(P2+np.eye(S)*10**-8)
 		h_t = f_t - np.dot(np.dot(P12,P2inv),np.dot(A_t_plus_1,f_t)) + np.dot(np.dot(P12,P2inv),h_t_plus_1)
 		H_t = np.dot(np.dot(P12,np.dot(P2inv,H_t_plus_1)),np.dot(P2inv.T,P21)) + P1 - np.dot(np.dot(P12,P2inv),P21)
 		return h_t, H_t
@@ -91,7 +93,7 @@ class LDS:
 			if F == 0:
 				if self.S>1:
 					F = np.zeros((self.S,self.S))
-		f_new, F_new = self.filter_one_step(y[count],self.A,self.B,self.E_h,self.E_o,f,F)
+		f_new, F_new = self.filter_one_step(y[count],self.A,self.B,self.E_h,self.E_o,f,F,self.S,self.O)
 		f_list.append(f_new)
 		F_list.append(F_new)
 		count = count + 1
@@ -160,7 +162,7 @@ class LDS:
 		elif count < len(y):
 			f = f_list[self.K-1-count]
 			F = F_list[self.K-1-count]
-			h_new, H_new = self.smooth_one_step(self.A,self.E_h,f,F,h,H)
+			h_new, H_new = self.smooth_one_step(self.A,self.E_h,f,F,h,H,self.S,self.O)
 			h_list.append(h_new)
 			H_list.append(H_new)
 			count = count + 1
