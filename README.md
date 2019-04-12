@@ -8,9 +8,9 @@ Probabilistic Time Series Models
 - HMM Viterbi algorithm for most probable path
 - LDS filtering and smoothing
 - LDS EM parameter estimation
+- Switching State Space Models with structured variational inference
 
 # In Progress
-- Switching State Space Models with structured variational inference
 - Switching State Space Models with Rao-Blackwellized Particle Filtering
 - Better visualization for experiments (f.e. covariance info visualization in LDS)
 
