@@ -104,15 +104,11 @@ class discrete_observation_HMM:
         for epoch in range(num_of_epochs):
             #E-step
             log_gamma = self.forward_backward(y)
-            #gamma = normalize_exp(log_gamma,axis=0)
             gamma = normalize_exp(log_gamma)
             log_alpha, log_alpha_predict = self.forward_pass(y)
-            #alpha = normalize_exp(log_alpha,axis=0)
             alpha = normalize_exp(log_alpha)
             log_beta, log_beta_postdict = self.backward_pass(y)
-            #beta = normalize_exp(log_beta,axis=0)
             beta = normalize_exp(log_beta)
-            #beta_postdict = normalize_exp(log_beta_postdict,axis=0)
             beta_postdict = normalize_exp(log_beta_postdict)
             #M-step
             pi_estimated = gamma[:,0]
@@ -264,15 +260,11 @@ class continuous_observation_HMM:
             for epoch in range(num_of_epochs):
                 #E-step
                 log_gamma = self.forward_backward(y)
-                #gamma = normalize_exp(log_gamma,axis=0)
                 gamma = normalize_exp(log_gamma)
                 log_alpha, log_alpha_predict = self.forward_pass(y)
-                #alpha = normalize_exp(log_alpha,axis=0)
                 alpha = normalize_exp(log_alpha)
                 log_beta, log_beta_postdict = self.backward_pass(y)
-                #beta = normalize_exp(log_beta,axis=0)
                 beta = normalize_exp(log_beta)
-                #beta_postdict = normalize_exp(log_beta_postdict,axis=0)
                 beta_postdict = normalize_exp(log_beta_postdict)
                 #M-step
                 pi_estimated = gamma[:,0]
@@ -323,15 +315,11 @@ class continuous_observation_HMM:
             for epoch in range(num_of_epochs):
                 #E-step
                 log_gamma = self.forward_backward(y)
-                #gamma = normalize_exp(log_gamma,axis=0)
                 gamma = normalize_exp(log_gamma)
                 log_alpha, log_alpha_predict = self.forward_pass(y)
-                #alpha = normalize_exp(log_alpha,axis=0)
                 alpha = normalize_exp(log_alpha)
                 log_beta, log_beta_postdict = self.backward_pass(y)
-                #beta = normalize_exp(log_beta,axis=0)
                 beta = normalize_exp(log_beta)
-                #beta_postdict = normalize_exp(log_beta_postdict,axis=0)
                 beta_postdict = normalize_exp(log_beta_postdict)
                 #M-step
                 pi_estimated = gamma[:,0]
