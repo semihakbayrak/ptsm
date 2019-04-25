@@ -9,6 +9,7 @@ Probabilistic Time Series Models
 - LDS filtering and smoothing
 - LDS EM parameter estimation
 - Switching State Space Models with structured variational inference
+- Switching State Space Models EM parameter estimation
 
 # In Progress
 - Switching State Space Models with Rao-Blackwellized Particle Filtering
