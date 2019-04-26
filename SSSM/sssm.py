@@ -14,7 +14,7 @@ from utils import randgen, normalize_exp
 from adaptedCHMM import adaptedCHMM as cHMM
 from lds import LDS
 
-class SSSM:
+class SSSM(object):
 	def __init__(self,M,pi_d,A,B,pi_m,pi_s,K,S,O,E_h,E_o,T=0):
 		self.M = M #Transition matrix of discrete hidden variables
 		self.pi_d = pi_d #prior state distributions for first discrete hidden variable
@@ -40,6 +40,10 @@ class SSSM:
 		for k in range(self.K): self.B_tensor[k,:,:] = self.B[k]
 		self.E_o_tensor = np.zeros((self.K,self.O,self.O))
 		for k in range(self.K): self.E_o_tensor[k,:,:] = self.E_o[k]
+
+	#method to modify transition matrix of hmm - required to implement dirichlet prior
+	def change_M(self,new_M):
+		self.M = new_M
 
 	def generate_data(self,T):
 		#T is the number of time slices to simulate
@@ -202,7 +206,7 @@ class SSSM:
 		return f_list,F_list,h_list,H_list,g_list,G_list,gamma,log_alpha,log_beta_postdict,prob_matrix
 
 	#Parameter estimation with EM
-	def EM(self,y,M_init=np.nan,pi_d_init=np.nan,A_init=np.nan,B_init=np.nan,pi_m_init=np.nan,pi_s_init=np.nan,E_h_init=np.nan,E_o_init=np.nan,estimate=['M','A','B','pi_m','pi_s','pi_d','E_h','E_o'],num_iterations_EM=20,num_iterations_SVI=40):
+	def EM(self,y,M_init=np.nan,pi_d_init=np.nan,A_init={0:np.nan},B_init={0:np.nan},pi_m_init={0:np.nan},pi_s_init={0:np.nan},E_h_init={0:np.nan},E_o_init={0:np.nan},estimate=['M','A','B','pi_m','pi_s','pi_d','E_h','E_o'],num_iterations_EM=20,num_iterations_SVI=40):
 		#parameters to be estimated
 		M_est = True if 'M' in estimate else False
 		A_est = True if 'A' in estimate else False
@@ -213,48 +217,48 @@ class SSSM:
 		E_h_est = True if 'E_h' in estimate else False
 		E_o_est = True if 'E_o' in estimate else False
 		#initialization
-		if np.isnan(M_init):
+		if np.isnan(M_init).any():
 			if M_est == True:
 				self.M = np.random.rand(self.K,self.K)
 				self.M = self.M/np.sum(self.M,axis=0)
 			else:
 				pass
-		if np.isnan(pi_d_init):
-			if M_est == True:
+		if np.isnan(pi_d_init).any():
+			if pi_d_est == True:
 				self.pi_d = np.ones(self.K)/self.K
 			else:
 				pass
-		if np.isnan(A_init):
+		if np.isnan(A_init[0]).any():
 			if A_est == True:
 				self.A = {}
 				for k in range(self.K): self.A[k] = np.random.rand(self.S,self.S)
 			else:
 				pass	
-		if np.isnan(B_init):
+		if np.isnan(B_init[0]).any():
 			if B_est == True:
 				self.B = {}
 				for k in range(self.K): self.B[k] = np.random.rand(self.O,self.S)
 			else:
 				pass
-		if np.isnan(pi_m_init):
+		if np.isnan(pi_m_init[0]).any():
 			if pi_m_est == True:
 				self.pi_m = {}
 				for k in range(self.K): self.pi_m[k] = np.random.rand(self.S)
 			else:
 				pass
-		if np.isnan(pi_s_init):
+		if np.isnan(pi_s_init[0]).any():
 			if pi_s_est == True:
 				self.pi_s = {}
 				for k in range(self.K): self.pi_s[k] = np.eye(self.S)
 			else:
 				pass
-		if np.isnan(E_h_init):
+		if np.isnan(E_h_init[0]).any():
 			if E_h_est == True:
 				self.E_h = {}
 				for k in range(self.K): self.E_h[k] = np.eye(self.S)
 			else:
 				pass
-		if np.isnan(E_o_init):
+		if np.isnan(E_o_init[0]).any():
 			if E_o_est == True:
 				self.E_o = {}
 				for k in range(self.K): self.E_o[k] = np.eye(self.O) if self.O>1 else 1.0
@@ -331,5 +335,5 @@ class SSSM:
 				M_estimated = M_estimated/np.sum(M_estimated,axis=0)
 				self.M = M_estimated
 		#Run and return the smoothing one more time after parameters are estimated
-		h_list, H_list, gamma = self.structured_vi(y)
-		return self.M, self.A, self.B, self.pi_m, self.pi_s, self.E_h, self.E_o, h_list, H_list, gamma
+		#h_list, H_list, gamma = self.structured_vi(y)
+		return self.M, self.A, self.B, self.pi_m, self.pi_s, self.E_h, self.E_o, h_list, H_list, gamma, log_alpha,log_beta_postdict,prob_matrix
