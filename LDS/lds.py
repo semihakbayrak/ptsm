@@ -84,15 +84,19 @@ class LDS:
 		return h_t, H_t
 
 	#Inference-Filtering
-	def filtering(self,y,f=0,F=0,f_list=[],F_list=[],count=0):
+	def filtering(self,y,f=0,F=0,f_list=None,F_list=None,count=0):
+		f_list = [] if f_list==None else f_list
+		F_list = [] if F_list==None else F_list
 		if type(f) == int:
 			if f == 0:
 				if self.S>1:
-					f = np.zeros(self.S).reshape(self.S,1)
+					#f = np.zeros(self.S).reshape(self.S,1)
+					f = self.pi_m.reshape(self.S,1)
 		if type(F) == int:
 			if F == 0:
 				if self.S>1:
-					F = np.zeros((self.S,self.S))
+					#F = np.zeros((self.S,self.S))
+					F = self.pi_s
 		f_new, F_new = self.filter_one_step(y[count],self.A,self.B,self.E_h,self.E_o,f,F,self.S,self.O)
 		f_list.append(f_new)
 		F_list.append(F_new)
@@ -104,7 +108,9 @@ class LDS:
 			return f_list, F_list
 
 	#Inference-Backward
-	def backward(self,y,g=0,G=0,g_list=[],G_list=[],count=0):
+	def backward(self,y,g=0,G=0,g_list=None,G_list=None,count=0):
+		g_list = [] if g_list==None else g_list
+		G_list = [] if G_list==None else G_list
 		if count == 0:
 			g_new = np.dot(np.linalg.pinv(self.B),y[self.K-count-1].reshape(self.O,1))
 			G_new = np.dot(np.linalg.pinv(self.B),np.dot(self.E_o,np.linalg.pinv(self.B.T)))
@@ -150,7 +156,11 @@ class LDS:
 		return h_list, H_list
 
 	#Inference-Smoothing smoothing works like correction for filtering
-	def smoothing(self,y,h=0,H=0,h_list=[],H_list=[],f_list=[],F_list=[],count=0):
+	def smoothing(self,y,h=0,H=0,h_list=None,H_list=None,f_list=None,F_list=None,count=0):
+		f_list = [] if f_list==None else f_list
+		F_list = [] if F_list==None else F_list
+		h_list = [] if h_list==None else h_list
+		H_list = [] if H_list==None else H_list
 		if count == 0:
 			f_list, F_list = self.filtering(y)
 			h_new, H_new = f_list[-1], F_list[-1]
@@ -185,6 +195,7 @@ class LDS:
 			self.A = np.random.rand(self.S,self.S) if A_est == True	else self.A	
 		if np.isnan(B_init):
 			self.B = np.random.rand(self.O,self.S) if B_est == True else self.B
+			#self.B = np.ones((self.O,self.S)) if B_est == True else self.B
 		if np.isnan(pi_m_init):
 			self.pi_m = np.random.rand(self.S) if pi_m_est == True else self.pi_m
 		if np.isnan(pi_s_init):

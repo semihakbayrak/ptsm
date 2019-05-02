@@ -33,15 +33,24 @@ class robustSSSM(SSSM):
 		super(robustSSSM,self).__init__(self.M_mean,pi_d,A,B,pi_m,pi_s,K,S,O,E_h,E_o,T)
 
 	#Parameter estimation, Bayesian inference for states and transition matrix of HMM
-	def VEM(self,y,A_init={0:np.nan},B_init={0:np.nan},pi_m_init={0:np.nan},pi_s_init={0:np.nan},pi_d_init=np.nan,E_h_init={0:np.nan},E_o_init={0:np.nan},estimate=['A','B','pi_m','pi_s','pi_d','E_h','E_o'],num_iterations_VEM=20,num_iterations_SVI=40):
+	def VEM(self,y,A_init={0:np.nan},B_init={0:np.nan},pi_m_init={0:np.nan},pi_s_init={0:np.nan},pi_d_init=np.nan,E_h_init={0:np.nan},E_o_init={0:np.nan},estimate=['M','A','B','pi_m','pi_s','pi_d','E_h','E_o'],num_iterations_VEM=20,num_iterations_SVI=40):
+		if 'M' in estimate:
+			estimate_list = []
+			for element in estimate: 
+				if element != 'M':
+					estimate_list.append(element)
+		else:
+			self.M, self.A, self.B, self.pi_m, self.pi_s, self.E_h, self.E_o, h_list, H_list, gamma, log_alpha,log_beta_postdict,prob_matrix = super(robustSSSM,self).EM(y,pi_d_init=pi_d_init,
+					A_init=A_init,B_init=B_init,pi_m_init=pi_m_init,pi_s_init=pi_s_init,E_h_init=E_h_init,E_o_init=E_o_init,estimate=estimate_list,num_iterations_EM=num_iterations_VEM,num_iterations_SVI=num_iterations_SVI)
+			return self.M, self.A, self.B, self.pi_m, self.pi_s, self.E_h, self.E_o, h_list, H_list, gamma
 		for it in range(num_iterations_VEM):
 			#_,_,_,_,_,_,gamma,log_alpha,log_beta_postdict,prob_matrix = super(robustSSSM,self).structured_vi_for_em(y,num_iterations=num_iterations_SVI)
 			if it == 0:
 				_, self.A, self.B, self.pi_m, self.pi_s, self.E_h, self.E_o, h_list, H_list, gamma, log_alpha,log_beta_postdict,prob_matrix = super(robustSSSM,self).EM(y,pi_d_init=pi_d_init,
-					A_init=A_init,B_init=B_init,pi_m_init=pi_m_init,pi_s_init=pi_s_init,E_h_init=E_h_init,E_o_init=E_o_init,estimate=estimate,num_iterations_EM=1,num_iterations_SVI=num_iterations_SVI)
+					A_init=A_init,B_init=B_init,pi_m_init=pi_m_init,pi_s_init=pi_s_init,E_h_init=E_h_init,E_o_init=E_o_init,estimate=estimate_list,num_iterations_EM=1,num_iterations_SVI=num_iterations_SVI)
 			else:
 				_, self.A, self.B, self.pi_m, self.pi_s, self.E_h, self.E_o, h_list, H_list, gamma, log_alpha,log_beta_postdict,prob_matrix = super(robustSSSM,self).EM(y,pi_d_init=self.pi_d,
-					A_init=self.A,B_init=self.B,pi_m_init=self.pi_m,pi_s_init=self.pi_s,E_h_init=self.E_h,E_o_init=self.E_o,estimate=estimate,num_iterations_EM=1,num_iterations_SVI=num_iterations_SVI)
+					A_init=self.A,B_init=self.B,pi_m_init=self.pi_m,pi_s_init=self.pi_s,E_h_init=self.E_h,E_o_init=self.E_o,estimate=estimate_list,num_iterations_EM=1,num_iterations_SVI=num_iterations_SVI)
 			M_count = np.zeros((self.K,self.K))
 			for t in range(self.T):
 				if t != 0:
@@ -58,3 +67,7 @@ class robustSSSM(SSSM):
 			super(robustSSSM,self).change_M(self.M_mean)
 		h_list, H_list, gamma = super(robustSSSM,self).structured_vi(y)
 		return self.D, self.A, self.B, self.pi_m, self.pi_s, self.E_h, self.E_o, h_list, H_list, gamma
+
+	#method to modify dirichlet parameters - required for SPLDS
+	def change_D(self,new_D):
+		self.D = new_D
