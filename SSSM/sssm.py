@@ -30,6 +30,7 @@ class SSSM(object):
 		self.T = T #Number of time slices
 		#Dictionary to tensor
 		self.dict_to_tensor()
+		self.Q_z = self.initialize_Q_z(self.K,self.T) #Initialize q(z):Probability of discrete states over time
 
 	def dict_to_tensor(self):
 		self.A_tensor = np.zeros((self.K,self.S,self.S))
@@ -151,14 +152,12 @@ class SSSM(object):
 
 	#Structured VI to infer continuous and discrete latent states for known model parameters
 	def structured_vi(self,y,num_iterations=100):
-		#Initialization of q(z)
-		Q_z = self.initialize_Q_z(self.K,self.T)
 		for _ in range(num_iterations):
 			#Expectation LDS tensors w.r.t. Q_z through time
-			A_expectations = self.expectation_through_time(self.A_tensor,Q_z)
-			E_h_expectations = self.expectation_through_time(self.E_h_tensor,Q_z)
-			B_expectations = self.expectation_through_time(self.B_tensor,Q_z)
-			E_o_expectations = self.expectation_through_time(self.E_o_tensor,Q_z)
+			A_expectations = self.expectation_through_time(self.A_tensor,self.Q_z)
+			E_h_expectations = self.expectation_through_time(self.E_h_tensor,self.Q_z)
+			B_expectations = self.expectation_through_time(self.B_tensor,self.Q_z)
+			E_o_expectations = self.expectation_through_time(self.E_o_tensor,self.Q_z)
 			#evaluate q(x)
 			#approximate posterior marginals q(x_t)
 			#filtering
@@ -171,19 +170,18 @@ class SSSM(object):
 			hmm = cHMM(self.M,self.pi_d,self.K,self.S,self.O,self.A,self.B,self.pi_m,self.pi_s,self.E_h,self.E_o,h_list,H_list,g_list,G_list,self.T)
 			log_gamma = hmm.forward_backward(y)
 			gamma = normalize_exp(log_gamma)
-			Q_z = gamma
+			self.Q_z = gamma
 
 		return h_list,H_list,gamma
 
 	#Structured VI for E-step of em
 	def structured_vi_for_em(self,y,num_iterations=100):
-		Q_z = self.initialize_Q_z(self.K,self.T) #Initialization of q(z)
 		for _ in range(num_iterations):
 			#Expectation LDS tensors w.r.t. Q_z through time
-			A_expectations = self.expectation_through_time(self.A_tensor,Q_z)
-			E_h_expectations = self.expectation_through_time(self.E_h_tensor,Q_z)
-			B_expectations = self.expectation_through_time(self.B_tensor,Q_z)
-			E_o_expectations = self.expectation_through_time(self.E_o_tensor,Q_z)
+			A_expectations = self.expectation_through_time(self.A_tensor,self.Q_z)
+			E_h_expectations = self.expectation_through_time(self.E_h_tensor,self.Q_z)
+			B_expectations = self.expectation_through_time(self.B_tensor,self.Q_z)
+			E_o_expectations = self.expectation_through_time(self.E_o_tensor,self.Q_z)
 			#evaluate q(x)
 			#approximate posterior marginals q(x_t)
 			#filtering
@@ -196,7 +194,7 @@ class SSSM(object):
 			hmm = cHMM(self.M,self.pi_d,self.K,self.S,self.O,self.A,self.B,self.pi_m,self.pi_s,self.E_h,self.E_o,h_list,H_list,g_list,G_list,self.T)
 			log_gamma = hmm.forward_backward(y)
 			gamma = normalize_exp(log_gamma)
-			Q_z = gamma
+			self.Q_z = gamma
 		log_alpha, log_alpha_predict = hmm.forward_pass(y)
 		alpha = normalize_exp(log_alpha)
 		log_beta, log_beta_postdict = hmm.backward_pass(y)
