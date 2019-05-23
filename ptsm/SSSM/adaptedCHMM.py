@@ -5,7 +5,8 @@ import numpy as np
 import matplotlib.pyplot as plt
 import scipy.stats
 
-from utils import randgen
+from ..utils import randgen
+
 from ..HMM import continuous_observation_HMM as cHMM
 
 class adaptedCHMM(cHMM):

@@ -2,8 +2,8 @@ import numpy as np
 import matplotlib.pyplot as plt
 import scipy.stats
 
-from utils import randgen, normalize_exp
-#from hmm import continuous_observation_HMM as cHMM
+from ..utils import randgen, normalize_exp
+
 from .adaptedCHMM import adaptedCHMM as cHMM
 from ..LDS import LDS
 from .sssm import SSSM

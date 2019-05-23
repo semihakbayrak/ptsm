@@ -3,7 +3,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import scipy.stats
 
-from utils import randgen, log_sum_exp, normalize_exp
+from ..utils import randgen, log_sum_exp, normalize_exp
 
 class discrete_observation_HMM:
     def __init__(self,A,B,pi,S,O,K=0):
