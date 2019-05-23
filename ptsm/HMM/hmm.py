@@ -2,11 +2,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import scipy.stats
-#add parent directory to path
-import os, sys
-parentPath = os.path.abspath("..")
-if parentPath not in sys.path:
-    sys.path.insert(0, parentPath)
+
 from utils import randgen, log_sum_exp, normalize_exp
 
 class discrete_observation_HMM:

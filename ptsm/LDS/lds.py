@@ -1,11 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import scipy.stats
-#add parent directory to path
-import os, sys
-parentPath = os.path.abspath("..")
-if parentPath not in sys.path:
-	sys.path.insert(0, parentPath)
 
 '''
 LDS class works with the generic array definition of numpy.

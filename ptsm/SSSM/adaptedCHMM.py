@@ -4,15 +4,9 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import scipy.stats
-#add parent directory to path
-import os, sys
-parentPath = os.path.abspath("..")
-if parentPath not in sys.path:
-	sys.path.insert(0, parentPath)
-#from utils import randgen, log_sum_exp, normalize, normalize_exp
-sys.path.insert(1, parentPath+"/HMM")
+
 from utils import randgen
-from hmm import continuous_observation_HMM as cHMM
+from ..HMM import continuous_observation_HMM as cHMM
 
 class adaptedCHMM(cHMM):
 	def __init__(self,A,pi,S,S_h,S_o,transLDSdict,emisLDSdict,pi_mLDSdict,pi_sLDSdict,E_h_dict,E_o_dict,h_list,H_list,g_list,G_list,K=0):

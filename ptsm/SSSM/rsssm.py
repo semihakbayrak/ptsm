@@ -1,19 +1,12 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import scipy.stats
-#add parent directory to path
-import os, sys
-parentPath = os.path.abspath("..")
-if parentPath not in sys.path:
-	sys.path.insert(0, parentPath)
-#from utils import randgen, log_sum_exp, normalize, normalize_exp
-sys.path.insert(1, parentPath+"/HMM")
-sys.path.insert(2, parentPath+"/LDS")
+
 from utils import randgen, normalize_exp
 #from hmm import continuous_observation_HMM as cHMM
-from adaptedCHMM import adaptedCHMM as cHMM
-from lds import LDS
-from sssm import SSSM
+from .adaptedCHMM import adaptedCHMM as cHMM
+from ..LDS import LDS
+from .sssm import SSSM
 
 class robustSSSM(SSSM):
 	def __init__(self,D,pi_d,A,B,pi_m,pi_s,K,S,O,E_h,E_o,T=0):
