@@ -92,8 +92,9 @@ class SSSM(object):
 	#Inference-Filtering for LDS part
 	def filtering(self,y,A_expectations,B_expectations,E_h_expectations,E_o_expectations,S,O,T):
 		f_list, F_list = [], []
-		f = np.zeros(S).reshape(S,1)
-		F = np.zeros((S,S))
+		f, F = np.zeros((S,1)), np.zeros((S,S))
+		for k in range(self.K): f = f+self.pi_d[k]*self.pi_m[k].reshape(S,1)
+		for k in range(self.K): F = F+self.pi_d[k]*self.pi_s[k].reshape(S,S)
 		for t in range(T):
 			A_t = A_expectations[t]
 			B_t = B_expectations[t]
@@ -171,6 +172,7 @@ class SSSM(object):
 			log_gamma = hmm.forward_backward(y)
 			gamma = normalize_exp(log_gamma)
 			self.Q_z = gamma
+			self.pi_d = self.Q_z[:,0]
 
 		return h_list,H_list,gamma
 
@@ -231,7 +233,7 @@ class SSSM(object):
 				self.A = {}
 				for k in range(self.K): self.A[k] = np.random.rand(self.S,self.S)
 			else:
-				pass	
+				pass
 		if np.isnan(B_init[0]).any():
 			if B_est == True:
 				self.B = {}
@@ -299,7 +301,7 @@ class SSSM(object):
 			#E_o update
 			if E_o_est == True:
 				for k in range(self.K):
-					sum1 = 0 
+					sum1 = 0
 					sum3 = 0
 					for t in range(self.T):
 						sum1 += gamma[k,t]*np.dot((np.dot(y[t].reshape(self.O,1), h_list[t].T)),self.B[k].reshape(self.O,1).T)
