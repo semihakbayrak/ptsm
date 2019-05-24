@@ -42,7 +42,7 @@ class adaptedCHMM(cHMM):
 		for k in range(self.K):
 			h_t, H_t = self.h_list[k], self.H_list[k]
 			if k == 0:
-				log_alpha_predict[:,k] = np.log(self.pi)
+				log_alpha_predict[:,k] = np.log(self.pi+10**-320)
 				log_alpha[:,k] = self.state_update_z1(y[k],log_alpha_predict[:,k],self.transLDSdict,self.emisLDSdict,self.pi_mLDSdict,self.pi_sLDSdict,self.E_o_dict,self.S,self.S_h,self.S_o,h_t,H_t)
 			else:
 				h_t_old, H_t_old = self.h_list[k-1], self.H_list[k-1]
